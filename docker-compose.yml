@@ -1,0 +1,29 @@
+services:
+  user-service:
+    build: .
+    container_name: user-service
+    ports:
+      - "3001:3000"
+      - "5052:5052"
+    depends_on:
+      - mongo
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+
+  mongo:
+    image: mongo
+    container_name: mongo_data
+    environment: 
+      MONGO_INITDB_ROOT_USERNAME: cuong040205a7
+      MONGO_INITDB_ROOT_PASSWORD: c3QXJdnBd5m68Ejk
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes: 
+  mongo-data:
