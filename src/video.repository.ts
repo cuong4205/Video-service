@@ -115,4 +115,8 @@ export class VideoRepository {
     await this.redisService.delete(`video:${id}`);
     return this.videoModel.findByIdAndUpdate(id, update, { new: true }).exec();
   }
+
+  async increaseView(videoId: string): Promise<any> {
+    await this.videoModel.findByIdAndUpdate(videoId, { $inc: { views: 1 } });
+  }
 }

@@ -12,6 +12,9 @@ import mongoConfig from './mongodb/database.config';
 import { ConfigModule } from '@nestjs/config';
 import { VideoRepository } from './video.repository';
 import { VideoGrpcController } from './video-grpc.controller';
+import { KafkaModule } from './kafka/kafka.module';
+import { VideoProducer } from './kafka/video.producer';
+import { VideoConsumer } from './kafka/video.consumer';
 
 @Module({
   imports: [
@@ -21,13 +24,14 @@ import { VideoGrpcController } from './video-grpc.controller';
     VideoDatabaseModule,
     VideoClientsModule,
     UserClientsModule,
+    KafkaModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [mongoConfig],
     }),
   ],
   controllers: [VideoController, VideoGrpcController],
-  providers: [VideoService, VideoRepository],
+  providers: [VideoService, VideoRepository, VideoProducer, VideoConsumer],
   exports: [VideoService],
 })
 export class VideoModule {}

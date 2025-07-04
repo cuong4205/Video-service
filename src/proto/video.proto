@@ -3,14 +3,14 @@ syntax = "proto3";
 package video;
 
 service VideoService {
-  rpc FindVideosByOwnerIdGrpc(FindVideosByOwnerIdGrpcRequest)
+  rpc FindVideosByOwnerId(FindVideosByOwnerIdRequest)
       returns (VideoListResponse);
   rpc TestGrpc(TestRequest) returns (TestResponse);
   rpc UploadVideo(VideoRequest) returns (VideoResponse);
   rpc AddComment(AddCommentRequest) returns (VideoResponse);
 }
 
-message FindVideosByOwnerIdGrpcRequest { string id = 1; }
+message FindVideosByOwnerIdRequest { string id = 1; }
 
 message VideoRequest {
   string id = 1;

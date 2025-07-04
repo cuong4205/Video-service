@@ -9,6 +9,7 @@ import { VideoRepository } from './video.repository';
 import { Observable, of } from 'rxjs';
 import { ClientGrpc } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
+import { VideoProducer } from './kafka/video.producer';
 
 interface UserServiceInterface {
   findUserById(request: { id: string }): Observable<any>;
@@ -20,6 +21,7 @@ export class VideoService {
 
   constructor(
     private readonly videoRepository: VideoRepository,
+    private readonly videoProducer: VideoProducer,
     @Inject('USER_PACKAGE') private client: ClientGrpc,
   ) {}
 
@@ -47,6 +49,7 @@ export class VideoService {
       if (!result) {
         throw new NotFoundException(`Video with ID ${id} not found`);
       }
+      this.videoProducer.emitVideoViewed(id);
       return result;
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -66,6 +69,7 @@ export class VideoService {
       if (!result) {
         throw new NotFoundException(`Video with ID ${title} not found`);
       }
+      this.videoProducer.emitVideoViewed(result.id);
       return result;
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -76,13 +80,10 @@ export class VideoService {
     }
   }
 
-  async create(video: Partial<Video>): Promise<Video> {
-    if (!video.title || !video.owner) {
-      throw new BadRequestException('Video title and owner ID are required');
-    }
-
+  async create(video: Partial<Video>): Promise<{ video: Video }> {
     try {
-      return await this.videoRepository.create(video);
+      const result = await this.videoRepository.create(video);
+      return { video: result };
     } catch (error) {
       console.error('Error creating video:', error);
       throw new Error('Failed to create video');
@@ -109,10 +110,15 @@ export class VideoService {
     }
   }
 
-  async findVideosByOwnerIdGrpc(request: { id: string }): Promise<Video[]> {
+  async findVideosByOwnerId(request: {
+    id: string;
+  }): Promise<{ videos: Video[] }> {
     try {
       const videos = await this.videoRepository.findByOwner(request.id);
-      return videos; // Return empty array if no videos found
+      for (const video of videos) {
+        this.videoProducer.emitVideoViewed(video.id);
+      }
+      return { videos }; // Return empty array if no videos found
     } catch (error) {
       console.log(request);
       console.error(`Error finding videos by owner ${request.id}:`, error);

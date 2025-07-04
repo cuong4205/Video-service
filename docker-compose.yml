@@ -1,19 +1,4 @@
 services:
-  user-service:
-    build: .
-    container_name: user-service
-    ports:
-      - "3001:3000"
-      - "5052:5052"
-    depends_on:
-      - mongo
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
-      interval: 1m30s
-      timeout: 30s
-      retries: 5
-      start_period: 30s
-
   mongo:
     image: mongo
     container_name: mongo_data
@@ -24,6 +9,43 @@ services:
       - "27018:27017"
     volumes:
       - mongo-data:/data/db
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+    ports:
+      - "9200:9200"
+    environment:
+      discovery.type: "single-node"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+
+  redis:
+    image: redis:latest
+    ports: 
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    
+  redpanda:
+    image: redpandadata/redpanda:latest
+    container_name: redpanda
+    ports:
+      - "9092:9092"
+      - "9644:9644"  # Admin API
+    command:
+      - redpanda
+      - start
+      - --smp 1
+      - --memory 512M
+      - --overprovisioned
+      - --node-id 0
+      - --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+      - --advertise-kafka-addr PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
+    volumes:
+      - redpanda-data:/var/lib/redpanda/data
 
 volumes: 
   mongo-data:
+  esdata:
+  redis-data:
+  redpanda-data:

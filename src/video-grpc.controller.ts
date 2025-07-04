@@ -9,10 +9,17 @@ import { UploadVideoDto } from './model/upload-video-dto';
  */
 @Controller('videos')
 export class VideoGrpcController {
-  private videoService: VideoService;
+  constructor(private readonly videoService: VideoService) {}
 
   @GrpcMethod('VideoService', 'UploadVideo')
-  async uploadVideo(uploadVideoDto: UploadVideoDto): Promise<Video> {
+  async uploadVideo(uploadVideoDto: {
+    id: string;
+    title: string;
+    description: string;
+    url: string;
+    ageConstraint: number;
+    tags: string[];
+  }): Promise<{ video: Video }> {
     try {
       return await this.videoService.create(uploadVideoDto);
     } catch (error) {
@@ -21,10 +28,12 @@ export class VideoGrpcController {
     }
   }
 
-  @GrpcMethod('VideoService', 'FindVideosByOwnerIdGrpc')
-  async findVideosByOwnerIdGrpc(request: { id: string }): Promise<Video[]> {
+  @GrpcMethod('VideoService', 'FindVideosByOwnerId')
+  async findVideosByOwnerId(request: {
+    id: string;
+  }): Promise<{ videos: Video[] }> {
     console.log(request);
-    const result = await this.videoService.findVideosByOwnerIdGrpc(request);
+    const result = await this.videoService.findVideosByOwnerId(request);
     console.log(result);
     if (!result) {
       throw new NotFoundException('Videos not found');

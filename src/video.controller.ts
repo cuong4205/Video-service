@@ -43,9 +43,9 @@ export class VideoController {
   }
 
   @Get('find/user')
-  async findVideoByUser(@Query('id') id: string): Promise<Video[]> {
+  async findVideoByUser(@Query('id') id: string): Promise<{ videos: Video[] }> {
     try {
-      return await this.videoService.findVideosByOwnerIdGrpc({ id });
+      return await this.videoService.findVideosByOwnerId({ id });
     } catch (error) {
       console.log(error);
       throw new NotFoundException('Videos not found');
@@ -53,7 +53,9 @@ export class VideoController {
   }
 
   @Post('upload')
-  async uploadVideo(@Body() uploadVideoDto: UploadVideoDto): Promise<Video> {
+  async uploadVideo(
+    @Body() uploadVideoDto: UploadVideoDto,
+  ): Promise<{ video: Video }> {
     try {
       return await this.videoService.create(uploadVideoDto);
     } catch (error) {
@@ -89,9 +91,11 @@ export class VideoController {
   }
 
   @Get('find/owner')
-  async findVideosByOwnerId(@Query('id') id: string): Promise<Video[]> {
+  async findVideosByOwnerId(
+    @Query('id') id: string,
+  ): Promise<{ videos: Video[] }> {
     try {
-      return await this.videoService.findVideosByOwnerIdGrpc({ id });
+      return await this.videoService.findVideosByOwnerId({ id });
     } catch (error) {
       console.log(id);
       console.log(error);
