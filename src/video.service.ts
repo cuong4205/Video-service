@@ -10,6 +10,7 @@ import { Observable, of } from 'rxjs';
 import { ClientGrpc } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
 import { VideoProducer } from './kafka/video.producer';
+import { UploadVideoDto } from './model/upload-video-dto';
 
 interface UserServiceInterface {
   findUserById(request: { id: string }): Observable<any>;
@@ -50,6 +51,7 @@ export class VideoService {
         throw new NotFoundException(`Video with ID ${id} not found`);
       }
       this.videoProducer.emitVideoViewed(id);
+      await this.videoRepository.increaseView(id);
       return result;
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -62,25 +64,26 @@ export class VideoService {
 
   async findByTitle(title: string): Promise<Video> {
     if (!title) {
-      throw new BadRequestException('Video ID is required');
+      throw new BadRequestException('Video title is required');
     }
     try {
       const result = await this.videoRepository.findByTitle(title);
       if (!result) {
-        throw new NotFoundException(`Video with ID ${title} not found`);
+        throw new NotFoundException(`Video with  ${title} not found`);
       }
       this.videoProducer.emitVideoViewed(result.id);
+      await this.videoRepository.increaseView(result.id);
       return result;
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      console.error(`Error finding video by ID ${title}:`, error);
+      console.error(`Error finding video by title ${title}:`, error);
       throw new Error('Failed to find video');
     }
   }
 
-  async create(video: Partial<Video>): Promise<{ video: Video }> {
+  async create(video: UploadVideoDto): Promise<{ video: Video }> {
     try {
       const result = await this.videoRepository.create(video);
       return { video: result };

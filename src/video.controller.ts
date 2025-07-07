@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Delete, Body, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Query,
+  Put,
+} from '@nestjs/common';
 import { VideoService } from './video.service';
 import { Video } from './model/video.schema';
 import { UploadVideoDto } from './model/upload-video-dto';
@@ -87,6 +95,16 @@ export class VideoController {
       console.log(deleted);
       console.log(error);
       throw new NotFoundException('Video not found');
+    }
+  }
+
+  @Put('update')
+  async updateVideo(@Body() videoDto: UploadVideoDto): Promise<any> {
+    try {
+      return await this.videoService.updateById(videoDto.id, videoDto);
+    } catch (error) {
+      console.log(error);
+      throw new NotFoundException('Video not updated');
     }
   }
 

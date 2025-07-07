@@ -7,12 +7,15 @@ import { Model } from 'mongoose';
 import { Video, VideoDocument } from './model/video.schema';
 import { CustomEsService } from './elasticsearch/elasticsearch.service';
 import { RedisCacheService } from './redis/redis.service';
+import { UploadVideoDto } from './model/upload-video-dto';
+import { VideoProducer } from './kafka/video.producer';
 @Injectable()
 export class VideoRepository {
   constructor(
     @InjectModel(Video.name) private readonly videoModel: Model<VideoDocument>,
     private readonly esService: CustomEsService,
     private readonly redisService: RedisCacheService,
+    private readonly videoProducer: VideoProducer,
   ) {}
 
   async findAll(): Promise<Video[]> {
@@ -43,6 +46,7 @@ export class VideoRepository {
         JSON.stringify(result._source),
         60,
       );
+      this.videoProducer.emitVideoViewed(id);
       return result._source as Video;
     }
     return null;
@@ -65,7 +69,7 @@ export class VideoRepository {
     return null;
   }
 
-  async create(video: Partial<Video>): Promise<Video> {
+  async create(video: UploadVideoDto): Promise<Video> {
     const newVideo = new this.videoModel(video);
 
     const esData = {
@@ -75,6 +79,8 @@ export class VideoRepository {
       url: newVideo.url,
       tags: newVideo.tags,
       owner: newVideo.owner,
+      ageConstraint: newVideo.ageConstraint,
+      viewCount: newVideo.viewCount,
     };
     await this.esService.index('videos', newVideo.id, esData);
     const cached = await this.redisService.set(
@@ -113,10 +119,23 @@ export class VideoRepository {
     delete updateWithoutId.id;
     await this.esService.update('videos', id, updateWithoutId);
     await this.redisService.delete(`video:${id}`);
-    return this.videoModel.findByIdAndUpdate(id, update, { new: true }).exec();
+    return this.videoModel
+      .findOneAndUpdate({ id }, update, { new: true })
+      .exec();
   }
 
   async increaseView(videoId: string): Promise<any> {
-    await this.videoModel.findByIdAndUpdate(videoId, { $inc: { views: 1 } });
+    await this.videoModel.updateOne(
+      { id: videoId },
+      { $inc: { viewCount: 1 } },
+    );
+    await this.esService.update('videos', videoId, {
+      script: {
+        source: 'ctx._source.viewCount = (ctx._source.viewCount ?: 0) + 1',
+      },
+      upsert: {
+        viewCount: 0,
+      },
+    });
   }
 }

@@ -17,8 +17,9 @@ message VideoRequest {
   string title = 2;
   string description = 3;
   string url = 4;
-  int32 ageConstraint = 5;
-  repeated string tags = 6;
+  repeated string tags = 5;
+  string owner = 6;
+  int32 ageConstraint = 7;
 }
 
 message AddCommentRequest {

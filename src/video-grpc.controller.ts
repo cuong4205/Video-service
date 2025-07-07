@@ -11,19 +11,22 @@ import { UploadVideoDto } from './model/upload-video-dto';
 export class VideoGrpcController {
   constructor(private readonly videoService: VideoService) {}
 
+  // missing owner field
   @GrpcMethod('VideoService', 'UploadVideo')
   async uploadVideo(uploadVideoDto: {
     id: string;
     title: string;
     description: string;
     url: string;
-    ageConstraint: number;
     tags: string[];
+    owner: string;
+    ageConstraint: number;
   }): Promise<{ video: Video }> {
     try {
       return await this.videoService.create(uploadVideoDto);
     } catch (error) {
       console.log(error);
+      console.log(uploadVideoDto);
       throw new NotFoundException('Video not created');
     }
   }
