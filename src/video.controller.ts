@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { VideoService } from './video.service';
 import { Video } from './model/video.schema';
-import { UploadVideoDto } from './model/upload-video-dto';
 import { NotFoundException } from '@nestjs/common';
 
 /* todo: Handle not found exception
@@ -61,11 +60,9 @@ export class VideoController {
   }
 
   @Post('upload')
-  async uploadVideo(
-    @Body() uploadVideoDto: UploadVideoDto,
-  ): Promise<{ video: Video }> {
+  async uploadVideo(@Body() video: Video): Promise<{ video: Video }> {
     try {
-      return await this.videoService.create(uploadVideoDto);
+      return await this.videoService.create(video);
     } catch (error) {
       console.log(error);
       throw new NotFoundException('Video not created');
@@ -99,7 +96,7 @@ export class VideoController {
   }
 
   @Put('update')
-  async updateVideo(@Body() videoDto: UploadVideoDto): Promise<any> {
+  async updateVideo(@Body() videoDto: Video): Promise<any> {
     try {
       return await this.videoService.updateById(videoDto.id, videoDto);
     } catch (error) {
@@ -125,7 +122,7 @@ export class VideoController {
   async findUserById(@Query('id') id: string): Promise<any> {
     try {
       console.log('success');
-      return await this.videoService.findUserById(id);
+      return await this.videoService.findUserById({ id });
     } catch (error) {
       console.log(error);
       throw new NotFoundException('User not found');

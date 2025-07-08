@@ -1,7 +1,7 @@
 import { IsString, IsOptional } from 'class-validator';
 import { Prop } from '@nestjs/mongoose';
 
-export class UploadVideoDto {
+export class VideoDto {
   @IsString()
   @IsOptional()
   @Prop()
@@ -16,7 +16,7 @@ export class UploadVideoDto {
   description: string;
 
   @Prop()
-  url: string;
+  filePath: string;
 
   @Prop()
   ageConstraint: number;

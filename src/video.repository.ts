@@ -7,7 +7,6 @@ import { Model } from 'mongoose';
 import { Video, VideoDocument } from './model/video.schema';
 import { CustomEsService } from './elasticsearch/elasticsearch.service';
 import { RedisCacheService } from './redis/redis.service';
-import { UploadVideoDto } from './model/upload-video-dto';
 import { VideoProducer } from './kafka/video.producer';
 @Injectable()
 export class VideoRepository {
@@ -69,25 +68,20 @@ export class VideoRepository {
     return null;
   }
 
-  async create(video: UploadVideoDto): Promise<Video> {
+  async create(video: Partial<Video>): Promise<Video> {
     const newVideo = new this.videoModel(video);
 
     const esData = {
       id: newVideo.id,
       title: newVideo.title,
       description: newVideo.description,
-      url: newVideo.url,
+      filePath: newVideo.filePath,
       tags: newVideo.tags,
       owner: newVideo.owner,
       ageConstraint: newVideo.ageConstraint,
       viewCount: newVideo.viewCount,
     };
     await this.esService.index('videos', newVideo.id, esData);
-    const cached = await this.redisService.set(
-      `video:${newVideo.id}`,
-      JSON.stringify(newVideo),
-    );
-    console.log(cached);
     return newVideo.save();
   }
 
@@ -129,13 +123,5 @@ export class VideoRepository {
       { id: videoId },
       { $inc: { viewCount: 1 } },
     );
-    await this.esService.update('videos', videoId, {
-      script: {
-        source: 'ctx._source.viewCount = (ctx._source.viewCount ?: 0) + 1',
-      },
-      upsert: {
-        viewCount: 0,
-      },
-    });
   }
 }

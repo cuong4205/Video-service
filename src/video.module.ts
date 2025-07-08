@@ -15,6 +15,7 @@ import { VideoGrpcController } from './video-grpc.controller';
 import { KafkaModule } from './kafka/kafka.module';
 import { VideoProducer } from './kafka/video.producer';
 import { VideoConsumer } from './kafka/video.consumer';
+import { StreamService } from './stream/stream.service';
 
 @Module({
   imports: [
@@ -31,7 +32,13 @@ import { VideoConsumer } from './kafka/video.consumer';
     }),
   ],
   controllers: [VideoController, VideoGrpcController],
-  providers: [VideoService, VideoRepository, VideoProducer, VideoConsumer],
+  providers: [
+    VideoService,
+    VideoRepository,
+    VideoProducer,
+    VideoConsumer,
+    StreamService,
+  ],
   exports: [VideoService],
 })
 export class VideoModule {}

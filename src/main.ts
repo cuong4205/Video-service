@@ -4,6 +4,18 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
   const app = await NestFactory.create(VideoModule);
+  app.connectMicroservice({
+    transport: Transport.KAFKA,
+    options: {
+      client: {
+        brokers: ['localhost:9092'],
+      },
+      consumer: {
+        groupId: 'video-consumer-group',
+      },
+    },
+  });
+
   await app.startAllMicroservices();
   await app.listen(3001);
   console.log('HTTP User Service is running on localhost:3001');

@@ -10,7 +10,9 @@ import { Observable, of } from 'rxjs';
 import { ClientGrpc } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
 import { VideoProducer } from './kafka/video.producer';
-import { UploadVideoDto } from './model/upload-video-dto';
+import { StreamService } from './stream/stream.service';
+import { StreamOption } from './stream/stream.option';
+import { StreamResult } from './stream/stream.result';
 
 interface UserServiceInterface {
   findUserById(request: { id: string }): Observable<any>;
@@ -21,6 +23,7 @@ export class VideoService {
   private userService: UserServiceInterface;
 
   constructor(
+    private readonly streamService: StreamService,
     private readonly videoRepository: VideoRepository,
     private readonly videoProducer: VideoProducer,
     @Inject('USER_PACKAGE') private client: ClientGrpc,
@@ -51,7 +54,6 @@ export class VideoService {
         throw new NotFoundException(`Video with ID ${id} not found`);
       }
       this.videoProducer.emitVideoViewed(id);
-      await this.videoRepository.increaseView(id);
       return result;
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -72,7 +74,6 @@ export class VideoService {
         throw new NotFoundException(`Video with  ${title} not found`);
       }
       this.videoProducer.emitVideoViewed(result.id);
-      await this.videoRepository.increaseView(result.id);
       return result;
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -83,7 +84,36 @@ export class VideoService {
     }
   }
 
-  async create(video: UploadVideoDto): Promise<{ video: Video }> {
+  async streamVideoById(
+    id: string,
+    options: StreamOption = {},
+  ): Promise<StreamResult> {
+    const video = await this.findById(id);
+
+    this.videoProducer.emitVideoViewed(id);
+
+    return this.streamService.streamFile(video.filePath, options);
+  }
+
+  async getVideoFileMetadata(id: string) {
+    const video = await this.findById(id);
+    const metadata = await this.streamService.getFileMetadata(video.filePath);
+
+    return {
+      video,
+      file: metadata,
+    };
+  }
+
+  async create(video: {
+    id: string;
+    title: string;
+    description: string;
+    filePath: string;
+    tags: string[];
+    owner: string;
+    ageConstraint: number;
+  }): Promise<{ video: Video }> {
     try {
       const result = await this.videoRepository.create(video);
       return { video: result };
@@ -151,14 +181,14 @@ export class VideoService {
     }
   }
 
-  async findUserById(id: string): Promise<any> {
+  async findUserById(request: { id: string }): Promise<any> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const result = await lastValueFrom(this.userService.findUserById({ id }));
-    console.log(id);
+    const result = await lastValueFrom(this.userService.findUserById(request));
+    console.log(result);
     try {
       return result;
     } catch (error) {
-      console.error(`Error finding user by ID ${id}:`, error);
+      console.error(`Error finding user by ID ${request.id}:`, error);
       console.log(result);
       throw new NotFoundException('User not found');
     }

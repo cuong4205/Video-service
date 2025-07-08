@@ -16,7 +16,7 @@ message VideoRequest {
   string id = 1;
   string title = 2;
   string description = 3;
-  string url = 4;
+  string filePath = 4;
   repeated string tags = 5;
   string owner = 6;
   int32 ageConstraint = 7;
@@ -31,7 +31,7 @@ message VideoResponse {
   string id = 1;
   string title = 2;
   string description = 3;
-  string url = 4;
+  string filePath = 4;
   repeated string comment = 5;
 }
 

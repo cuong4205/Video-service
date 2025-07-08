@@ -3,7 +3,6 @@ import { VideoService } from './video.service';
 import { Video } from './model/video.schema';
 import { NotFoundException } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
-import { UploadVideoDto } from './model/upload-video-dto';
 
 /* todo: Handle not found exception
  */
@@ -13,20 +12,20 @@ export class VideoGrpcController {
 
   // missing owner field
   @GrpcMethod('VideoService', 'UploadVideo')
-  async uploadVideo(uploadVideoDto: {
+  async uploadVideo(video: {
     id: string;
     title: string;
     description: string;
-    url: string;
+    filePath: string;
     tags: string[];
     owner: string;
     ageConstraint: number;
   }): Promise<{ video: Video }> {
     try {
-      return await this.videoService.create(uploadVideoDto);
+      return await this.videoService.create(video);
     } catch (error) {
       console.log(error);
-      console.log(uploadVideoDto);
+      console.log(video);
       throw new NotFoundException('Video not created');
     }
   }

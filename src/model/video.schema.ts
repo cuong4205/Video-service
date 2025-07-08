@@ -15,7 +15,7 @@ export class Video {
   description: string;
 
   @Prop()
-  url: string;
+  filePath: string;
 
   @Prop()
   comments: string[];
