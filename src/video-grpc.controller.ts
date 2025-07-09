@@ -47,9 +47,4 @@ export class VideoGrpcController {
   async addComment(request: { id: string; comment: string }): Promise<any> {
     return await this.videoService.addComment(request.id, request.comment);
   }
-
-  @GrpcMethod('VideoService', 'TestGrpc')
-  testGrpc(request: { message: string }): void {
-    this.videoService.testGrpc(request.message);
-  }
 }

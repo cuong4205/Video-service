@@ -31,14 +31,8 @@ import { StreamService } from './stream/stream.service';
       load: [mongoConfig],
     }),
   ],
-  controllers: [VideoController, VideoGrpcController],
-  providers: [
-    VideoService,
-    VideoRepository,
-    VideoProducer,
-    VideoConsumer,
-    StreamService,
-  ],
+  controllers: [VideoController, VideoGrpcController, VideoConsumer],
+  providers: [VideoService, VideoRepository, VideoProducer, StreamService],
   exports: [VideoService],
 })
 export class VideoModule {}

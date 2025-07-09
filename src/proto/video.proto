@@ -5,7 +5,6 @@ package video;
 service VideoService {
   rpc FindVideosByOwnerId(FindVideosByOwnerIdRequest)
       returns (VideoListResponse);
-  rpc TestGrpc(TestRequest) returns (TestResponse);
   rpc UploadVideo(VideoRequest) returns (VideoResponse);
   rpc AddComment(AddCommentRequest) returns (VideoResponse);
 }
@@ -34,9 +33,5 @@ message VideoResponse {
   string filePath = 4;
   repeated string comment = 5;
 }
-
-message TestRequest { string message = 1; }
-
-message TestResponse { string message = 1; }
 
 message VideoListResponse { repeated VideoResponse videos = 1; }

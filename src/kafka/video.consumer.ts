@@ -1,8 +1,8 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Controller, OnModuleInit } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { VideoRepository } from 'src/video.repository';
 
-@Injectable()
+@Controller()
 export class VideoConsumer implements OnModuleInit {
   constructor(private readonly videoRepository: VideoRepository) {}
 

@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Video } from './model/video.schema';
 import { VideoRepository } from './video.repository';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 import { ClientGrpc } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
 import { VideoProducer } from './kafka/video.producer';
@@ -82,27 +82,6 @@ export class VideoService {
       console.error(`Error finding video by title ${title}:`, error);
       throw new Error('Failed to find video');
     }
-  }
-
-  async streamVideoById(
-    id: string,
-    options: StreamOption = {},
-  ): Promise<StreamResult> {
-    const video = await this.findById(id);
-
-    this.videoProducer.emitVideoViewed(id);
-
-    return this.streamService.streamFile(video.filePath, options);
-  }
-
-  async getVideoFileMetadata(id: string) {
-    const video = await this.findById(id);
-    const metadata = await this.streamService.getFileMetadata(video.filePath);
-
-    return {
-      video,
-      file: metadata,
-    };
   }
 
   async create(video: {
@@ -207,7 +186,24 @@ export class VideoService {
     }
   }
 
-  testGrpc(message: string): Observable<any> {
-    return of({ message: 'Hello from VideoService!' + message });
+  async streamVideoById(
+    id: string,
+    options: StreamOption = {},
+  ): Promise<StreamResult> {
+    const video = await this.findById(id);
+
+    this.videoProducer.emitVideoViewed(id);
+
+    return this.streamService.streamFile(video.filePath, options);
+  }
+
+  async getVideoFileMetadata(id: string) {
+    const video = await this.findById(id);
+    const metadata = await this.streamService.getFileMetadata(video.filePath);
+
+    return {
+      video,
+      file: metadata,
+    };
   }
 }

@@ -6,16 +6,24 @@ import {
   Body,
   Query,
   Put,
+  Param,
+  Req,
+  Res,
+  Headers,
 } from '@nestjs/common';
 import { VideoService } from './video.service';
 import { Video } from './model/video.schema';
 import { NotFoundException } from '@nestjs/common';
+import { StreamService } from './stream/stream.service';
 
 /* todo: Handle not found exception
  */
 @Controller('videos')
 export class VideoController {
-  constructor(private videoService: VideoService) {}
+  constructor(
+    private videoService: VideoService,
+    private streamService: StreamService,
+  ) {}
 
   @Get('all')
   async findAll(): Promise<Video[]> {
@@ -126,6 +134,57 @@ export class VideoController {
     } catch (error) {
       console.log(error);
       throw new NotFoundException('User not found');
+    }
+  }
+
+  @Get(':id/stream')
+  async streamVideo(
+    @Param('id') id: string,
+    @Req() req: Request,
+    @Res() res: Response,
+    @Headers('range') range?: string,
+  ) {
+    try {
+      let streamOptions = {};
+
+      // Parse range header if present
+      if (range) {
+        const video = await this.videoService.findById(id);
+        const fileSize = await this.streamService.getFileSize(video.filePath);
+        const { start, end } = this.streamService.parseRangeHeader(
+          range,
+          fileSize,
+        );
+        streamOptions = { start, end };
+      }
+
+      const streamResult = await this.videoService.streamVideoById(
+        id,
+        streamOptions,
+      );
+
+      // Set response headers
+      const headers = {
+        'Content-Type': streamResult.contentType,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': streamResult.contentLength.toString(),
+        'Cache-Control': 'public, max-age=CACHE_DURATION', // Cache for 1 hour
+      };
+
+      // Add range-specific headers if this is a partial content request
+      if (range) {
+        headers['Content-Range'] = this.streamService.generateContentRange(
+          streamResult.start,
+          streamResult.end,
+          streamResult.totalSize,
+        );
+      }
+
+      // Stream the video
+
+      //streamResult.stream.getStream().pipe(res);
+    } catch (error) {
+      console.error('Error streaming video:', error);
     }
   }
 }
