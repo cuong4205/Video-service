@@ -7,7 +7,6 @@ import {
   Query,
   Put,
   Param,
-  Req,
   Res,
   Headers,
 } from '@nestjs/common';
@@ -15,6 +14,7 @@ import { VideoService } from './video.service';
 import { Video } from './model/video.schema';
 import { NotFoundException } from '@nestjs/common';
 import { StreamService } from './stream/stream.service';
+import { Response, Request } from 'express';
 
 /* todo: Handle not found exception
  */
@@ -26,7 +26,7 @@ export class VideoController {
   ) {}
 
   @Get('all')
-  async findAll(): Promise<Video[]> {
+  async findAll(): Promise<{ videos: Video[] }> {
     try {
       return await this.videoService.findAll();
     } catch (error) {
@@ -140,7 +140,6 @@ export class VideoController {
   @Get(':id/stream')
   async streamVideo(
     @Param('id') id: string,
-    @Req() req: Request,
     @Res() res: Response,
     @Headers('range') range?: string,
   ) {
@@ -168,7 +167,7 @@ export class VideoController {
         'Content-Type': streamResult.contentType,
         'Accept-Ranges': 'bytes',
         'Content-Length': streamResult.contentLength.toString(),
-        'Cache-Control': 'public, max-age=CACHE_DURATION', // Cache for 1 hour
+        'Cache-Control': 'public, max-age=CACHE_DURATION',
       };
 
       // Add range-specific headers if this is a partial content request
@@ -180,9 +179,7 @@ export class VideoController {
         );
       }
 
-      // Stream the video
-
-      //streamResult.stream.getStream().pipe(res);
+      streamResult.stream.getStream().pipe(res);
     } catch (error) {
       console.error('Error streaming video:', error);
     }

@@ -14,13 +14,13 @@ import { StreamService } from './stream/stream.service';
 import { StreamOption } from './stream/stream.option';
 import { StreamResult } from './stream/stream.result';
 
-interface UserServiceInterface {
+interface UserService {
   findUserById(request: { id: string }): Observable<any>;
 }
 
 @Injectable()
 export class VideoService {
-  private userService: UserServiceInterface;
+  private userService: UserService;
 
   constructor(
     private readonly streamService: StreamService,
@@ -30,13 +30,13 @@ export class VideoService {
   ) {}
 
   onModuleInit() {
-    this.userService =
-      this.client.getService<UserServiceInterface>('UserService');
+    this.userService = this.client.getService<UserService>('UserService');
   }
 
-  async findAll(): Promise<Video[]> {
+  async findAll(): Promise<{ videos: Video[] }> {
     try {
-      return await this.videoRepository.findAll();
+      const videos = await this.videoRepository.findAll();
+      return { videos };
     } catch (error) {
       console.error('Error fetching all videos:', error);
       throw new Error('Failed to fetch videos');
@@ -130,7 +130,7 @@ export class VideoService {
       for (const video of videos) {
         this.videoProducer.emitVideoViewed(video.id);
       }
-      return { videos }; // Return empty array if no videos found
+      return { videos };
     } catch (error) {
       console.log(request);
       console.error(`Error finding videos by owner ${request.id}:`, error);

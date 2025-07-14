@@ -47,4 +47,9 @@ export class VideoGrpcController {
   async addComment(request: { id: string; comment: string }): Promise<any> {
     return await this.videoService.addComment(request.id, request.comment);
   }
+
+  @GrpcMethod('VideoService', 'FindAll')
+  async findAll(): Promise<{ videos: Video[] }> {
+    return await this.videoService.findAll();
+  }
 }

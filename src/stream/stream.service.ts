@@ -27,8 +27,9 @@ export class StreamService {
     filePath: string,
     options: StreamOption = {},
   ): Promise<StreamResult> {
-    const fullPath = this.getFullPath(filePath);
-    const metadata = await this.getFileMetadata(fullPath);
+    console.log(`Streaming file from: ${filePath}`);
+    const metadata = await this.getFileMetadata(filePath);
+    console.log(`File meatadata: ${JSON.stringify(metadata)}`);
 
     if (!metadata.exists) {
       throw new NotFoundException(`Video file not found: ${filePath}`);
@@ -38,7 +39,7 @@ export class StreamService {
 
     this.validateRange(start, end, metadata.size);
 
-    const stream = createReadStream(fullPath, { start, end });
+    const stream = createReadStream(filePath, { start, end });
 
     return {
       stream: new StreamableFile(stream),
@@ -52,22 +53,21 @@ export class StreamService {
   }
 
   async getFileMetadata(filePath: string): Promise<FileMetadata> {
-    const fullPath = this.getFullPath(filePath);
-    const exists = existsSync(fullPath);
+    const exists = existsSync(filePath);
 
     if (!exists) {
       return {
-        path: fullPath,
+        path: filePath,
         size: 0,
         contentType: 'application/octet-stream',
         exists: false,
       };
     }
 
-    const stats = statSync(fullPath);
+    const stats = statSync(filePath);
 
     return {
-      path: fullPath,
+      path: filePath,
       size: stats.size,
       contentType: this.getContentType(filePath),
       exists: true,
@@ -90,18 +90,15 @@ export class StreamService {
   }
 
   async fileExists(filePath: string): Promise<boolean> {
-    const fullPath = this.getFullPath(filePath);
-    return existsSync(fullPath);
+    return existsSync(filePath);
   }
 
   async getFileSize(filePath: string): Promise<number> {
-    const fullPath = this.getFullPath(filePath);
-
-    if (!existsSync(fullPath)) {
+    if (!existsSync(filePath)) {
       throw new NotFoundException(`File not found: ${filePath}`);
     }
 
-    const stats = statSync(fullPath);
+    const stats = statSync(filePath);
     return stats.size;
   }
 
@@ -123,12 +120,6 @@ export class StreamService {
         'Start position cannot be greater than end position',
       );
     }
-  }
-
-  private getFullPath(filePath: string): string {
-    // Sanitize file path to prevent directory traversal
-    const sanitizedPath = filePath.replace(/\.\./g, '').replace(/\\/g, '/');
-    return join(process.cwd(), this.videosPath, sanitizedPath);
   }
 
   private getContentType(filePath: string): string {

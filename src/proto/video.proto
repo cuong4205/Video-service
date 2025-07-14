@@ -7,6 +7,7 @@ service VideoService {
       returns (VideoListResponse);
   rpc UploadVideo(VideoRequest) returns (VideoResponse);
   rpc AddComment(AddCommentRequest) returns (VideoResponse);
+  rpc FindAll(Empty) returns (VideoListResponse);
 }
 
 message FindVideosByOwnerIdRequest { string id = 1; }
@@ -33,5 +34,7 @@ message VideoResponse {
   string filePath = 4;
   repeated string comment = 5;
 }
+
+message Empty {}
 
 message VideoListResponse { repeated VideoResponse videos = 1; }

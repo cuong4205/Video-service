@@ -11,7 +11,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
           client: {
             clientId: 'video-service-client',
             brokers: ['localhost:9092'],
-            connectionTimeout: 3000,
+            connectionTimeout: 30000,
             requestTimeout: 30000,
           },
           consumer: {
