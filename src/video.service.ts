@@ -206,4 +206,32 @@ export class VideoService {
       file: metadata,
     };
   }
+
+  async getTopVideo(
+    limit: number = 10,
+  ): Promise<Array<{ videoId: string; viewCount: number }>> {
+    try {
+      return await this.videoRepository.getTopVideo(limit);
+    } catch (error) {
+      console.log(`Error getting top videos leaderboard:`, error);
+      throw new Error('Failed to get the leaderboard');
+    }
+  }
+
+  async getTimeBasedLeaderboard(
+    timeType: 'daily' | 'weekly' | 'monthly' | 'all',
+    limit: number = 10,
+    date?: string,
+  ): Promise<Array<{ videoId: string; viewCount: number }>> {
+    try {
+      return await this.videoRepository.getTimeBasedLeaderboard(
+        timeType,
+        limit,
+        date,
+      );
+    } catch (error) {
+      console.log(`Error getting time-based leaderboard:`, error);
+      throw new Error('Failed to get the time-based leaderboard');
+    }
+  }
 }

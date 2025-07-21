@@ -124,4 +124,18 @@ export class VideoRepository {
       { $inc: { viewCount: 1 } },
     );
   }
+
+  async getTopVideo(
+    limit: number = 10,
+  ): Promise<Array<{ videoId: string; viewCount: number }>> {
+    return this.redisService.getTopVideos(limit);
+  }
+
+  async getTimeBasedLeaderboard(
+    timeType: 'daily' | 'weekly' | 'monthly' | 'all',
+    limit: number = 10,
+    date?: string,
+  ): Promise<Array<{ videoId: string; viewCount: number }>> {
+    return this.redisService.getTimeBasedLeaderboard(timeType, limit, date);
+  }
 }

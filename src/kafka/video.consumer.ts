@@ -1,10 +1,14 @@
 import { Controller, OnModuleInit } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
+import { RedisCacheService } from 'src/redis/redis.service';
 import { VideoRepository } from 'src/video.repository';
 
 @Controller()
 export class VideoConsumer implements OnModuleInit {
-  constructor(private readonly videoRepository: VideoRepository) {}
+  constructor(
+    private readonly videoRepository: VideoRepository,
+    private readonly redisCacheService: RedisCacheService,
+  ) {}
 
   onModuleInit() {
     console.log('VideoConsumer initialized');
@@ -16,5 +20,6 @@ export class VideoConsumer implements OnModuleInit {
     const { videoId } = data;
     console.log('Received video.viewed event:', data);
     await this.videoRepository.increaseView(videoId);
+    await this.redisCacheService.incrementViewCountWithTime(videoId);
   }
 }

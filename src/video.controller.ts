@@ -184,4 +184,30 @@ export class VideoController {
       console.error('Error streaming video:', error);
     }
   }
+
+  @Get('leaderboard')
+  async getTopVideo(@Query('limit') limit: number): Promise<any> {
+    try {
+      return await this.videoService.getTopVideo(limit);
+    } catch (error) {
+      console.log('Something went wrong with the process', error);
+    }
+  }
+
+  @Get('leaderboard/:timeType')
+  async getTimeBasedLeaderboard(
+    @Param('timeType') timeType: 'daily' | 'weekly' | 'monthly' | 'all',
+    @Query('limit') limit: number,
+    @Query('date') date: string,
+  ): Promise<any> {
+    try {
+      return await this.videoService.getTimeBasedLeaderboard(
+        timeType,
+        limit,
+        date,
+      );
+    } catch (error) {
+      console.log('Something went wrong with the process', error);
+    }
+  }
 }
