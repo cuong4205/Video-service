@@ -22,10 +22,9 @@ export class VideoGrpcController {
     ageConstraint: number;
   }): Promise<{ video: Video }> {
     try {
-      return await this.videoService.create(video);
+      return await this.videoService.upload(video);
     } catch (error) {
       console.log(error);
-      console.log(video);
       throw new NotFoundException('Video not created');
     }
   }
@@ -34,7 +33,6 @@ export class VideoGrpcController {
   async findVideosByOwnerId(request: {
     id: string;
   }): Promise<{ videos: Video[] }> {
-    console.log(request);
     const result = await this.videoService.findVideosByOwnerId(request);
     console.log(result);
     if (!result) {

@@ -15,4 +15,9 @@ export class VideoProducer {
     this.client.emit('video.viewed', { videoId });
     console.log('Video viewed event emitted:', videoId);
   }
+
+  emitSendEmail(addr: string, message: string) {
+    this.client.emit('send.email', { addr, message });
+    console.log('send email');
+  }
 }

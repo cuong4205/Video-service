@@ -9,12 +9,16 @@ import {
   Param,
   Res,
   Headers,
+  UseGuards,
+  Request,
+  BadRequestException,
 } from '@nestjs/common';
 import { VideoService } from './video.service';
 import { Video } from './model/video.schema';
 import { NotFoundException } from '@nestjs/common';
 import { StreamService } from './stream/stream.service';
-import { Response, Request } from 'express';
+import { Response } from 'express';
+import { JwtRemoteAuthGuard } from './jwt-remote-auth.guard';
 
 /* todo: Handle not found exception
  */
@@ -25,6 +29,7 @@ export class VideoController {
     private streamService: StreamService,
   ) {}
 
+  @UseGuards(JwtRemoteAuthGuard)
   @Get('all')
   async findAll(): Promise<{ videos: Video[] }> {
     try {
@@ -67,10 +72,18 @@ export class VideoController {
     }
   }
 
+  @UseGuards(JwtRemoteAuthGuard)
   @Post('upload')
-  async uploadVideo(@Body() video: Video): Promise<{ video: Video }> {
+  async uploadVideo(
+    @Body() video: Video,
+    @Request()
+    req: Request & { user: { id: string; email: string; age: number } },
+  ): Promise<{ video: Video }> {
+    if (req.user.age < video.ageConstraint)
+      throw new BadRequestException('Age constraint not met');
+
     try {
-      return await this.videoService.create(video);
+      return await this.videoService.upload(video);
     } catch (error) {
       console.log(error);
       throw new NotFoundException('Video not created');
@@ -84,7 +97,7 @@ export class VideoController {
       return await this.videoService.addComment(id, comment);
     } catch (error) {
       console.log(error);
-      throw new NotFoundException('Comment not added');
+      throw new BadRequestException('Comment not added');
     }
   }
 
@@ -97,7 +110,6 @@ export class VideoController {
       }
       return deleted;
     } catch (error) {
-      console.log(deleted);
       console.log(error);
       throw new NotFoundException('Video not found');
     }
@@ -129,8 +141,8 @@ export class VideoController {
   @Get('find/user')
   async findUserById(@Query('id') id: string): Promise<any> {
     try {
-      console.log('success');
       return await this.videoService.findUserById({ id });
+      console.log('success');
     } catch (error) {
       console.log(error);
       throw new NotFoundException('User not found');
@@ -138,46 +150,22 @@ export class VideoController {
   }
 
   @Get(':id/stream')
-  async streamVideo(
-    @Param('id') id: string,
-    @Res() res: Response,
-    @Headers('range') range?: string,
-  ) {
+  async streamVideo(@Param('id') id: string, @Res() res: Response) {
     try {
-      let streamOptions = {};
-
-      // Parse range header if present
-      if (range) {
-        const video = await this.videoService.findById(id);
-        const fileSize = await this.streamService.getFileSize(video.filePath);
-        const { start, end } = this.streamService.parseRangeHeader(
-          range,
-          fileSize,
-        );
-        streamOptions = { start, end };
-      }
+      const streamOptions = {};
 
       const streamResult = await this.videoService.streamVideoById(
         id,
         streamOptions,
       );
 
-      // Set response headers
-      const headers = {
-        'Content-Type': streamResult.contentType,
+      res.set({
+        'Content-Type': streamResult.contentType, // ví dụ: video/mp4
+        'Content-Length': streamResult.contentLength,
         'Accept-Ranges': 'bytes',
-        'Content-Length': streamResult.contentLength.toString(),
-        'Cache-Control': 'public, max-age=CACHE_DURATION',
-      };
-
-      // Add range-specific headers if this is a partial content request
-      if (range) {
-        headers['Content-Range'] = this.streamService.generateContentRange(
-          streamResult.start,
-          streamResult.end,
-          streamResult.totalSize,
-        );
-      }
+        'Content-Range': `bytes ${streamResult.start}-${streamResult.end}/${streamResult.totalSize}`,
+        'Content-Disposition': 'inline', // để trình duyệt phát video
+      });
 
       streamResult.stream.getStream().pipe(res);
     } catch (error) {

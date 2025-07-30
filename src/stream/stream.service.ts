@@ -6,7 +6,6 @@ import {
   StreamableFile,
 } from '@nestjs/common';
 import { createReadStream, statSync, existsSync } from 'fs';
-import { join } from 'path';
 import { ConfigService } from '@nestjs/config';
 import { FileMetadata } from './fileMetaData';
 import { StreamOption } from './stream.option';
@@ -14,13 +13,10 @@ import { StreamResult } from './stream.result';
 
 @Injectable()
 export class StreamService {
-  private readonly uploadsPath: string;
   private readonly videosPath: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.uploadsPath =
-      this.configService.get<string>('UPLOADS_PATH') || 'uploads';
-    this.videosPath = join(this.uploadsPath, 'videos');
+    this.videosPath = this.configService.get<string>('VIDEO_PATH') || 'uploads';
   }
 
   async streamFile(

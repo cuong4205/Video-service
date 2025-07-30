@@ -2,27 +2,27 @@ services:
   mongo:
     image: mongo
     container_name: mongo_data
-    environment: 
+    environment:
       MONGO_INITDB_ROOT_USERNAME: cuong040205a7
       MONGO_INITDB_ROOT_PASSWORD: c3QXJdnBd5m68Ejk
     ports:
-      - "27018:27017"
+      - '27018:27017'
     volumes:
       - mongo-data:/data/db
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
     ports:
-      - "9200:9200"
+      - '9200:9200'
     environment:
-      discovery.type: "single-node"
-      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      discovery.type: 'single-node'
+      ES_JAVA_OPTS: '-Xms512m -Xmx512m'
     volumes:
       - esdata:/usr/share/elasticsearch/data
 
   redis:
     image: redis:latest
-    ports: 
-      - "6379:6379"
+    ports:
+      - '6379:6379'
     volumes:
       - redis-data:/data
 
@@ -31,7 +31,7 @@ services:
     hostname: zookeeper
     container_name: zookeeper
     ports:
-      - "2181:2181"
+      - '2181:2181'
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -43,8 +43,8 @@ services:
     depends_on:
       - zookeeper
     ports:
-      - "9092:9092"
-      - "9101:9101"
+      - '9092:9092'
+      - '9101:9101'
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
@@ -71,7 +71,7 @@ services:
     depends_on:
       - broker
     ports:
-      - "9021:9021"
+      - '9021:9021'
     environment:
       CONTROL_CENTER_BOOTSTRAP_SERVERS: 'broker:29092'
       CONTROL_CENTER_REPLICATION_FACTOR: 1
@@ -80,8 +80,7 @@ services:
       CONFLUENT_METRICS_TOPIC_REPLICATION: 1
       PORT: 9021
 
-
-volumes: 
+volumes:
   mongo-data:
   esdata:
   redis-data:

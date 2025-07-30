@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Injectable,
   NotFoundException,
@@ -53,7 +55,6 @@ export class VideoService {
       if (!result) {
         throw new NotFoundException(`Video with ID ${id} not found`);
       }
-      this.videoProducer.emitVideoViewed(id);
       return result;
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -84,7 +85,7 @@ export class VideoService {
     }
   }
 
-  async create(video: {
+  async upload(video: {
     id: string;
     title: string;
     description: string;
@@ -94,11 +95,21 @@ export class VideoService {
     ageConstraint: number;
   }): Promise<{ video: Video }> {
     try {
-      const result = await this.videoRepository.create(video);
+      const result = await this.videoRepository.upload(video);
+      const user = await lastValueFrom(
+        this.userService.findUserById({ id: video.owner }),
+      );
+      for (const subcriber of user.subcribers) {
+        this.videoProducer.emitSendEmail(
+          subcriber as string,
+          `Checkout the latest video from ${user.email}.`,
+        );
+      }
+
       return { video: result };
     } catch (error) {
       console.error('Error creating video:', error);
-      throw new Error('Failed to create video');
+      throw new Error('Failed to upload video');
     }
   }
 
@@ -132,7 +143,6 @@ export class VideoService {
       }
       return { videos };
     } catch (error) {
-      console.log(request);
       console.error(`Error finding videos by owner ${request.id}:`, error);
       throw new Error('Failed to find videos by owner');
     }
@@ -161,7 +171,6 @@ export class VideoService {
   }
 
   async findUserById(request: { id: string }): Promise<any> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const result = await lastValueFrom(this.userService.findUserById(request));
     console.log(result);
     try {
@@ -175,11 +184,7 @@ export class VideoService {
 
   async addComment(id: string, comment: string): Promise<any> {
     try {
-      const video = await this.findById(id);
-      video.comments.push(comment);
-      return await this.videoRepository.updateById(id, {
-        comments: video.comments,
-      });
+      await this.videoRepository.addComment(id, comment);
     } catch (error) {
       console.error(`Error adding comment to video ${id}:`, error);
       throw new Error('Failed to add comment to video');

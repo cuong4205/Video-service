@@ -16,6 +16,7 @@ import { KafkaModule } from './kafka/kafka.module';
 import { VideoProducer } from './kafka/video.producer';
 import { VideoConsumer } from './kafka/video.consumer';
 import { StreamService } from './stream/stream.service';
+import { AuthClientsModule } from './gRPC-client/auth-client.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { StreamService } from './stream/stream.service';
     VideoDatabaseModule,
     VideoClientsModule,
     UserClientsModule,
+    AuthClientsModule,
     KafkaModule,
     ConfigModule.forRoot({
       isGlobal: true,
