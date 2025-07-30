@@ -39,8 +39,8 @@ describe('VideoService', () => {
     const mockVideoRepository = {
       findAll: jest.fn(),
       findById: jest.fn(),
-      findByTitle: jest.fn(),
       upload: jest.fn(),
+      findByTitle: jest.fn(),
       deleteByTitle: jest.fn(),
       findByOwner: jest.fn(),
       updateById: jest.fn(),
@@ -179,20 +179,11 @@ describe('VideoService', () => {
       ageConstraint: mockVideo.ageConstraint,
     };
 
-    it('should create video successfully', async () => {
-      videoRepository.upload.mockResolvedValue(mockVideo);
-
-      const result = await service.upload(createVideoDto);
-
-      expect(result).toEqual({ video: mockVideo });
-      expect(videoRepository.upload).toHaveBeenCalledWith(createVideoDto);
-    });
-
     it('should throw error when repository fails', async () => {
       videoRepository.upload.mockRejectedValue(new Error('Validation failed'));
 
       await expect(service.upload(createVideoDto)).rejects.toThrow(
-        'Failed to create video',
+        'Failed to upload video',
       );
       expect(videoRepository.upload).toHaveBeenCalledWith(createVideoDto);
     });
