@@ -36,4 +36,4 @@ async function bootstrap() {
   await grpcApp.listen();
   console.log('gRPC Video Service is running on localhost:50001');
 }
-bootstrap();
+void bootstrap();

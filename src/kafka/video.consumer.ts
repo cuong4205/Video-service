@@ -19,7 +19,7 @@ export class VideoConsumer implements OnModuleInit {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { videoId } = data;
     console.log('Received video.viewed event:', data);
-    await this.videoRepository.increaseView(videoId);
-    await this.redisCacheService.incrementViewCountWithTime(videoId);
+    await this.videoRepository.increaseView(videoId as string);
+    await this.redisCacheService.incrementViewCountWithTime(videoId as string);
   }
 }

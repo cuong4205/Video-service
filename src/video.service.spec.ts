@@ -10,7 +10,6 @@ import { VideoProducer } from './kafka/video.producer';
 describe('VideoService', () => {
   let service: VideoService;
   let videoRepository: jest.Mocked<VideoRepository>;
-  let videoProducer: jest.Mocked<VideoProducer>;
 
   const mockVideo: Video = {
     id: 'v123',
@@ -105,6 +104,7 @@ describe('VideoService', () => {
 
     it('should throw BadRequestException when id is not provided', async () => {
       await expect(service.findById('')).rejects.toThrow(BadRequestException);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       await expect(service.findById(null as any)).rejects.toThrow(
         BadRequestException,
       );
