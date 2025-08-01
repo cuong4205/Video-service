@@ -50,9 +50,9 @@ export class VideoController {
     }
   }
 
-  @Get('findByTitle')
-  async findByTitle(@Query('title') title: string): Promise<Video | null> {
-    const result = await this.videoService.findByTitle(title);
+  @Get('search')
+  async search(@Query('query') query: string): Promise<Video[] | null> {
+    const result = await this.videoService.search(query);
     try {
       return result;
     } catch (error) {
@@ -141,16 +141,27 @@ export class VideoController {
   @Get('find/user')
   async findUserById(@Query('id') id: string): Promise<any> {
     try {
-      return await this.videoService.findUserById({ id });
       console.log('success');
+      return await this.videoService.findUserById({ id });
     } catch (error) {
       console.log(error);
       throw new NotFoundException('User not found');
     }
   }
 
+  @UseGuards(JwtRemoteAuthGuard)
   @Get(':id/stream')
-  async streamVideo(@Param('id') id: string, @Res() res: Response) {
+  async streamVideo(
+    @Param('id') id: string,
+    @Res() res: Response,
+    @Request()
+    req: Request & { user: { id: string; email: string; age: number } },
+  ) {
+    console.log(req.user);
+    const video = await this.videoService.findById(id);
+    if (video.ageConstraint > req.user.age)
+      throw new BadRequestException('Age constraint not met');
+
     try {
       const streamOptions = {};
 
@@ -170,6 +181,16 @@ export class VideoController {
       streamResult.stream.getStream().pipe(res);
     } catch (error) {
       console.error('Error streaming video:', error);
+    }
+  }
+
+  @Get(':id/metadata')
+  async getVideoMetadata(@Param('id') id: string): Promise<any> {
+    try {
+      return await this.videoService.getVideoFileMetadata(id);
+    } catch (error) {
+      console.log(error);
+      throw new NotFoundException('Video not found');
     }
   }
 

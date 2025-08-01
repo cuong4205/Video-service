@@ -40,7 +40,7 @@ describe('VideoService', () => {
       findAll: jest.fn(),
       findById: jest.fn(),
       upload: jest.fn(),
-      findByTitle: jest.fn(),
+      search: jest.fn(),
       deleteByTitle: jest.fn(),
       findByOwner: jest.fn(),
       updateById: jest.fn(),
@@ -130,41 +130,37 @@ describe('VideoService', () => {
     });
   });
 
-  describe('findByTitle', () => {
+  describe('search', () => {
     it('should return video when found by title', async () => {
-      videoRepository.findByTitle.mockResolvedValue(mockVideo);
+      videoRepository.search.mockResolvedValue(mockVideos);
 
-      const result = await service.findByTitle(mockVideo.title);
+      const result = await service.search(mockVideo.title);
 
-      expect(result).toEqual(mockVideo);
-      expect(videoRepository.findByTitle).toHaveBeenCalledWith(mockVideo.title);
+      expect(result).toEqual(mockVideos);
+      expect(videoRepository.search).toHaveBeenCalledWith(mockVideo.title);
     });
 
     it('should throw BadRequestException when title is not provided', async () => {
-      await expect(service.findByTitle('')).rejects.toThrow(
-        BadRequestException,
-      );
-      expect(videoRepository.findByTitle).not.toHaveBeenCalled();
+      await expect(service.search('')).rejects.toThrow(BadRequestException);
+      expect(videoRepository.search).not.toHaveBeenCalled();
     });
 
     it('should throw NotFoundException when video not found', async () => {
-      videoRepository.findByTitle.mockResolvedValue(null);
+      videoRepository.search.mockResolvedValue(null);
 
-      await expect(service.findByTitle('nonexistent')).rejects.toThrow(
+      await expect(service.search('nonexistent')).rejects.toThrow(
         NotFoundException,
       );
-      expect(videoRepository.findByTitle).toHaveBeenCalledWith('nonexistent');
+      expect(videoRepository.search).toHaveBeenCalledWith('nonexistent');
     });
 
     it('should throw generic error when repository fails', async () => {
-      videoRepository.findByTitle.mockRejectedValue(
-        new Error('Database error'),
-      );
+      videoRepository.search.mockRejectedValue(new Error('Database error'));
 
-      await expect(service.findByTitle(mockVideo.title)).rejects.toThrow(
+      await expect(service.search(mockVideo.title)).rejects.toThrow(
         'Failed to find video',
       );
-      expect(videoRepository.findByTitle).toHaveBeenCalledWith(mockVideo.title);
+      expect(videoRepository.search).toHaveBeenCalledWith(mockVideo.title);
     });
   });
 

@@ -35,7 +35,6 @@ export class JwtRemoteAuthGuard implements CanActivate, OnModuleInit {
     const authHeader = request.headers.authorization;
 
     const token = authHeader?.split(' ')[1];
-    console.log(token);
 
     if (!token) {
       throw new UnauthorizedException('Token missing');

@@ -61,25 +61,34 @@ export class VideoRepository {
     return null;
   }
 
-  async findByTitle(title: string): Promise<Video | null> {
+  async search(query: string): Promise<Video[] | null> {
     // Fixed: Corrected template literal syntax
-    const cached = await this.redisService.get(`videos:${title}`);
+    const cached = await this.redisService.get(`videos:${query}`);
     if (cached) {
       console.log('Read data from cache');
       return JSON.parse(cached);
     }
     const result = await this.esService.search('videos', {
-      query: { match: { title } },
+      query: {
+        multi_match: {
+          query,
+          fields: ['title', 'description'],
+          type: 'phrase',
+          operator: 'OR', // or 'OR' depending on your requirements
+        },
+      },
+      size: 3,
     });
-    if (result && result.hits.hits.length > 0) {
+    if (result) {
       await this.redisService.set(
-        `video:${title}`,
+        `videos:${query}`,
         JSON.stringify(result.hits.hits[0]._source),
         60,
       );
-      return result.hits.hits[0]._source as Video;
+      console.log('set cache');
+      const videos = result.hits.hits.map((hit) => hit._source) as Video[];
+      return videos;
     }
-
     return null;
   }
 

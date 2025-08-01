@@ -1,9 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { VideoModule } from './video.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { logger } from './logger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(VideoModule);
+  const app = await NestFactory.create(VideoModule, { logger });
   app.connectMicroservice({
     transport: Transport.KAFKA,
     options: {
@@ -15,6 +16,8 @@ async function bootstrap() {
       },
     },
   });
+
+  app.enableCors();
 
   await app.startAllMicroservices();
   await app.listen(3001);

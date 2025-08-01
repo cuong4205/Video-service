@@ -65,22 +65,21 @@ export class VideoService {
     }
   }
 
-  async findByTitle(title: string): Promise<Video> {
-    if (!title) {
+  async search(query: string): Promise<Video[]> {
+    if (!query) {
       throw new BadRequestException('Video title is required');
     }
     try {
-      const result = await this.videoRepository.findByTitle(title);
+      const result = await this.videoRepository.search(query);
       if (!result) {
-        throw new NotFoundException(`Video with  ${title} not found`);
+        throw new NotFoundException(`Video with  ${query} not found`);
       }
-      this.videoProducer.emitVideoViewed(result.id);
       return result;
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      console.error(`Error finding video by title ${title}:`, error);
+      console.error(`Error finding video by title ${query}:`, error);
       throw new Error('Failed to find video');
     }
   }
@@ -96,15 +95,13 @@ export class VideoService {
   }): Promise<{ video: Video }> {
     try {
       const result = await this.videoRepository.upload(video);
-      const user = await lastValueFrom(
-        this.userService.findUserById({ id: video.owner }),
-      );
-      for (const subcriber of user.subcribers) {
+      const user = await this.findUserById({ id: video.owner });
+      console.log(user);
+      if (user.email)
         this.videoProducer.emitSendEmail(
-          subcriber as string,
-          `Checkout the latest video from ${user.email}.`,
+          user.email as string,
+          'Upload new video successfully',
         );
-      }
 
       return { video: result };
     } catch (error) {

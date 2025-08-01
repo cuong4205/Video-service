@@ -10,25 +10,6 @@ import { GrpcMethod } from '@nestjs/microservices';
 export class VideoGrpcController {
   constructor(private readonly videoService: VideoService) {}
 
-  // missing owner field
-  @GrpcMethod('VideoService', 'UploadVideo')
-  async uploadVideo(video: {
-    id: string;
-    title: string;
-    description: string;
-    filePath: string;
-    tags: string[];
-    owner: string;
-    ageConstraint: number;
-  }): Promise<{ video: Video }> {
-    try {
-      return await this.videoService.upload(video);
-    } catch (error) {
-      console.log(error);
-      throw new NotFoundException('Video not created');
-    }
-  }
-
   @GrpcMethod('VideoService', 'FindVideosByOwnerId')
   async findVideosByOwnerId(request: {
     id: string;

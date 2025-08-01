@@ -12,4 +12,5 @@ message ValidateTokenResponse {
   bool valid = 1;
   string userId = 2;
   string email = 3;
+  int32 age = 4;
 }
